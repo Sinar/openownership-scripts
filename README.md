@@ -2,6 +2,11 @@
 
 Scripts to convert Malaysian data into Beneficial Ownership Data Standard.
 
+## Terminology
+
+In this repository, the "Beneficial Ownership Data Standard" will be
+referenced as "BODS" in README files and scripts.
+
 ## Attention
 
 The standard is currently in draft form. See [overview][1].
