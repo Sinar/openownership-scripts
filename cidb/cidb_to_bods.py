@@ -15,7 +15,12 @@ def bods_interest(parse):
     description = ""
     # Use HINT to overwrite default values, if any
     if parse["#has_type"] == "firm":
-        pass # use default values for firm
+        if parse["#has_data"] == "yes":
+            pass # use default values for existing firm
+        else:
+            share_value = 0
+            interest_level = "unknown"
+            description = "details were not found in source"
     elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes" and \
            len(parse["shares"]) != 0:
@@ -93,9 +98,19 @@ def compile_person(parse):
 
 def compile_entity(parse):
     data = {}
-    data["#comment"] = "Firm details here" # DEBUG: Temp use
-    data["#has_type"] = "firm" # HINT: One-off use
-    data["#has_data"] = "yes" # HINT: One-off use
+    # check if "name" field contain valid string; assuming if valid,
+    # other fields would have some details if not all
+    if len(parse["name"]) == 0:
+        data["#comment"] = "No firm details" # DEBUG: Temp use
+        data["#has_type"] = "firm" # HINT: One-off use
+        data["#has_data"] = "no" # HINT: One-off use
+    elif len(parse["name"]) != 0:
+        data["#comment"] = "Firm details here" # DEBUG: Temp use
+        data["#has_type"] = "firm" # HINT: One-off use
+        data["#has_data"] = "yes" # HINT: One-off use
+    else:
+        # DEBUG: This should not happen
+        raise ValueError('Unexpected content in parse data', parse)
     # generate statement from firm details
     statement_list = []
     statement = bods_statement(data)
