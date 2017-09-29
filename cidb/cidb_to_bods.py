@@ -27,7 +27,8 @@ def bods_identifier(parse):
             pass # use default values for empty firm
     elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes":
-            target_id = parse["idenfity_card_no"] # this is not a typo!
+            icnum = parse["idenfity_card_no"] # this is not a typo!
+            target_id = "MYS-IDCARD-" + icnum # following BODS docs
             target_schema = "id-card" # using BODS codelist
         else:
             pass # use default values for empty director
