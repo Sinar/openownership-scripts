@@ -20,7 +20,7 @@ def bods_interest(parse):
         else:
             share_value = 0
             interest_level = "unknown"
-            description = "details were not found in source"
+            description = "no firm details"
     elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes" and \
            len(parse["shares"]) != 0:
@@ -29,7 +29,7 @@ def bods_interest(parse):
         else:
             share_value = 0
             interest_level = "unknown"
-            description = "shares were empty or not found in source"
+            description = "no shares or empty"
     else:
         # DEBUG: This should not happen
         raise ValueError('Unexpected HINT in parse data', parse)
@@ -77,7 +77,7 @@ def compile_person(parse):
     statement_list = []
     if isinstance(result, type(None)) or \
        len(parse["directors"]) == 0:
-        data["#comment"] = "No director details" # DEBUG: Temp use
+        data["#comment"] = "no director details" # DEBUG: Temp use
         data["#has_type"] = "person" # HINT: One-off use
         data["#has_data"] = "no" # HINT: One-off use
         statement = bods_statement(data)
@@ -85,7 +85,7 @@ def compile_person(parse):
 #        print('DEBUG: result no: {}'.format(data))
     elif len(parse["directors"]) >= 1:
         for data in parse["directors"]:
-            data["#comment"] = "Director details here" # DEBUG: Temp use
+            data["#comment"] = "director details here" # DEBUG: Temp use
             data["#has_type"] = "person" # HINT: One-off use
             data["#has_data"] = "yes" # HINT: One-off use
             statement = bods_statement(data)
@@ -101,16 +101,21 @@ def compile_entity(parse):
     # check if "name" field contain valid string; assuming if valid,
     # other fields would have some details if not all
     if len(parse["name"]) == 0:
-        data["#comment"] = "No firm details" # DEBUG: Temp use
+        data["#comment"] = "no firm details" # DEBUG: Temp use
         data["#has_type"] = "firm" # HINT: One-off use
         data["#has_data"] = "no" # HINT: One-off use
     elif len(parse["name"]) != 0:
-        data["#comment"] = "Firm details here" # DEBUG: Temp use
+        data["#comment"] = "firm details here" # DEBUG: Temp use
         data["#has_type"] = "firm" # HINT: One-off use
         data["#has_data"] = "yes" # HINT: One-off use
     else:
         # DEBUG: This should not happen
         raise ValueError('Unexpected content in parse data', parse)
+    # gather firm details and alternative naming for parse data
+    data["name"] = parse["name"]
+    data["name_info"] = parse["Profil"]
+    data["addr"] = parse["Alamat Surat Menyurat"]
+    data["addr_ssm"] = parse["Alamat Berdaftar seperti Didalam Sijil SSM"]
     # generate statement from firm details
     statement_list = []
     statement = bods_statement(data)
