@@ -7,6 +7,84 @@ import json
 import uuid
 import datetime
 
+def bods_identifier(parse):
+    # parse data for each identifier
+    target_id = ""
+    target_schema = ""
+    # Use HINT to overwrite default values, if any
+    if parse["#has_type"] == "firm":
+        # no persistent identifier in CIDB, use in following order
+        if len(parse["name_info"]["Nombor Pendaftaran"]) > 1:
+            target_id = parse["name_info"]["Nombor Pendaftaran"]
+            target_schema = "CIDB-registered"
+        elif len(parse["name_info"]["ROB"]) > 1:
+            target_id = parse["name_info"]["ROB"]
+            target_schema = "CIDB-ROB"
+        elif len(parse["name_info"]["ROC"]) > 1:
+            target_id = parse["name_info"]["ROC"]
+            target_schema = "CIDB-ROC"
+        else:
+            pass # use default values for empty firm
+    elif parse["#has_type"] == "person":
+        if parse["#has_data"] == "yes":
+            target_id = parse["idenfity_card_no"] # this is not a typo!
+            target_schema = "id-card" # using BODS codelist
+        else:
+            pass # use default values for empty director
+    else:
+        # DEBUG: This should not happen
+        raise ValueError('Unexpected HINT in parse data', parse)
+    # assign data into identifier fields
+    identifier_data = {
+        "id": target_id,
+        "schema": target_schema
+    }
+    return identifier_data
+
+def bods_party(parse):
+    # parse data for each interested party
+    now = datetime.datetime.now().strftime("%Y-%m-%d")
+    party_type = "arrangement"
+    party_name = "Joint shareholding"
+    null_party_type = ""
+    null_party_desc = ""
+    # Use HINT to overwrite default values, if any
+    if parse["#has_type"] == "firm":
+        if parse["#has_data"] == "yes":
+            pass # use default values for existing firm
+        else:
+            null_party_type = "unknown"
+            null_party_desc = "no party details"
+    elif parse["#has_type"] == "person":
+        if parse["#has_data"] == "yes":
+            party_name = parse["name"]
+            party_type = "naturalPerson"
+        else:
+            null_party_type = "unknown"
+            null_party_desc = "no party details"
+    else:
+        # DEBUG: This should not happen
+        raise ValueError('Unexpected HINT in parse data', parse)
+    identifier_list = []
+    identifier_list.append(bods_identifier(parse))
+    # assign data into interested party fields
+    interested_party_data = {
+        "id": uuid.uuid4().hex,
+        "statementDate": now,
+        "type": party_type,
+        "name": party_name,
+        "identifiers": identifier_list
+    }
+    # assign data into null party fields
+    null_party_data = {
+        "type": null_party_type,
+        "description": null_party_desc
+    }
+    # overwrite data to return if null_party_type has non-empty strings
+    if len(null_party_type) != 0:
+        interested_party_data = null_party_data
+    return interested_party_data
+
 def bods_interest(parse):
     # parse data for each interest
     interest_type = "shareholding"
@@ -52,7 +130,7 @@ def bods_statement(parse):
     entity = {}
     # TODO: entity for "firm" or "director"
     interested_party = {}
-    # TODO: interested_party for "firm" or "director"
+    interested_party = bods_party(parse)
     interest_list = []
     interest_list.append(bods_interest(parse))
     # assign data into statement fields
