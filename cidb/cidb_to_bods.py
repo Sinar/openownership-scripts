@@ -7,6 +7,40 @@ import json
 import uuid
 import datetime
 
+def bods_interest(parse):
+    # parse data for each interest
+    interest_type = "shareholding"
+    interest_level = "direct"
+    share_value = 100
+    description = ""
+    # Use HINT to overwrite default values, if any
+    if parse["#has_type"] == "firm":
+        pass # use default values for firm
+    elif parse["#has_type"] == "person":
+        if parse["#has_data"] == "yes" and \
+           len(parse["shares"]) != 0:
+#            print('DEBUG: shares: {}'.format(parse["shares"]))
+            share_value = parse["shares"]
+        else:
+            share_value = 0
+            interest_level = "unknown"
+            description = "shares were empty or not found in source"
+    else:
+        # DEBUG: This should not happen
+        raise ValueError('Unexpected HINT in parse data', parse)
+    annotation_list = []
+    annotation_list.append({"description": description})
+    # assign data into interest fields
+    interest_data = {
+        "type": interest_type,
+        "interestLevel": interest_level,
+        "share": {
+            "exact": float(share_value)
+        },
+        "annotations": annotation_list
+    }
+    return interest_data
+
 def bods_statement(parse):
     # parse data for each statement
     now = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -15,7 +49,7 @@ def bods_statement(parse):
     interested_party = {}
     # TODO: interested_party for "firm" or "director"
     interest_list = []
-    # TODO: interest_list.append() for "firm" or "director"
+    interest_list.append(bods_interest(parse))
     # assign data into statement fields
     statement_data = {
         "#comment": parse["#comment"], # DEBUG: Temp use
@@ -39,12 +73,16 @@ def compile_person(parse):
     if isinstance(result, type(None)) or \
        len(parse["directors"]) == 0:
         data["#comment"] = "No director details" # DEBUG: Temp use
+        data["#has_type"] = "person" # HINT: One-off use
+        data["#has_data"] = "no" # HINT: One-off use
         statement = bods_statement(data)
         statement_list.append(statement)
 #        print('DEBUG: result no: {}'.format(data))
     elif len(parse["directors"]) >= 1:
         for data in parse["directors"]:
             data["#comment"] = "Director details here" # DEBUG: Temp use
+            data["#has_type"] = "person" # HINT: One-off use
+            data["#has_data"] = "yes" # HINT: One-off use
             statement = bods_statement(data)
             statement_list.append(statement)
 #        print('DEBUG: result yes: {}'.format(data))
@@ -56,6 +94,8 @@ def compile_person(parse):
 def compile_entity(parse):
     data = {}
     data["#comment"] = "Firm details here" # DEBUG: Temp use
+    data["#has_type"] = "firm" # HINT: One-off use
+    data["#has_data"] = "yes" # HINT: One-off use
     # generate statement from firm details
     statement_list = []
     statement = bods_statement(data)
