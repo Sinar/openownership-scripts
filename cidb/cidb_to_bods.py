@@ -227,7 +227,6 @@ def bods_interest(parse):
     elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes" and \
            len(parse["shares"]) != 0:
-#            print('DEBUG: shares: {}'.format(parse["shares"]))
             share_value = parse["shares"]
         else:
             share_value = 0
@@ -286,7 +285,6 @@ def compile_person(parse):
         data["#has_data"] = "no" # HINT: One-off use
         statement = bods_statement(data)
         statement_list.append(statement)
-#        print('DEBUG: result no: {}'.format(data))
     elif len(parse["directors"]) >= 1:
         for data in parse["directors"]:
             data["#comment"] = "director details here" # DEBUG: Temp use
@@ -294,7 +292,6 @@ def compile_person(parse):
             data["#has_data"] = "yes" # HINT: One-off use
             statement = bods_statement(data)
             statement_list.append(statement)
-#        print('DEBUG: result yes: {}'.format(data))
     else:
         # DEBUG: This should not happen
         raise ValueError('Unexpected content in parse data', parse)
