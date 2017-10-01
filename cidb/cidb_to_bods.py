@@ -94,6 +94,86 @@ def bods_party(parse):
         interested_party_data = null_party_data
     return interested_party_data
 
+def entity_identifier(parse):
+    # parse data for identifier in entity
+    entity_id = ""
+    entity_schema = ""
+    # Use HINT to overwrite default values, if any
+    if parse["#has_type"] == "firm":
+        if parse["#has_data"] == "yes":
+            # no persistent ID in CIDB, use in following order
+            if len(parse["name_info"]["Nombor Pendaftaran"]) > 1:
+                entity_id = parse["name_info"]["Nombor Pendaftaran"]
+                entity_schema = "CIDB-registered"
+            elif len(parse["name_info"]["ROB"]) > 1:
+                entity_id = parse["name_info"]["ROB"]
+                entity_schema = "CIDB-ROB"
+            elif len(parse["name_info"]["ROC"]) > 1:
+                entity_id = parse["name_info"]["ROC"]
+                entity_schema = "CIDB-ROC"
+            else:
+                # if all above fail, use meta id that always exist
+                entity_id = parse["meta"]["id"]
+                entity_schema = "CIDB-META"
+        else:
+            pass # use default values for empty firm
+    elif parse["#has_type"] == "person":
+        # check content of global variable OBJ_LINK
+        if len(OBJ_LINK["firm"]) != 0:
+            entity_id = OBJ_LINK["firm"]["party_id"]
+            entity_schema = OBJ_LINK["firm"]["party_schema"]
+        else:
+            # DEBUG: Must prep data by party_identifier beforehand
+            raise ValueError('No data from party_identifier', parse)
+    else:
+        # DEBUG: This should not happen
+        raise ValueError('Unexpected HINT in parse data', parse)
+    # assign data into identifier fields
+    entity_identifier_data = {
+        "id": entity_id,
+        "schema": entity_schema
+    }
+    return entity_identifier_data
+
+def bods_entity(parse):
+    # parse data for each entity
+    generated_date = parse["generated_date"] # from bods_statement
+    entity_type = "arrangement"
+    entity_name = "Joint shareholding"
+    entity_date = "" # no founding date in source
+    identifier_list = []
+    identifier_list.append(entity_identifier(parse))
+    # Use HINT to overwrite default values, if any
+    if parse["#has_type"] == "firm":
+        if parse["#has_data"] == "yes":
+            entity_type = "registeredEntity"
+            entity_name = parse["name"]
+            # TODO: prepare firm data for additional field
+        else:
+            entity_type = "unknownEntity"
+            entity_name = ""
+    elif parse["#has_type"] == "person":
+        if parse["#has_data"] == "yes":
+            pass # use default values for existing person
+        else:
+            entity_type = "unknownEntity"
+            entity_name = ""
+    else:
+        # DEBUG: This should not happen
+        raise ValueError('Unexpected HINT in parse data', parse)
+    # assign data into entity fields
+    entity_data = {
+        "id": uuid.uuid4().hex,
+        "statementDate": generated_date,
+        "type": entity_type,
+        "name": entity_name,
+        "identifiers": identifier_list,
+        "foundingDate": entity_date,
+        "jurisdiction": "MY"
+    }
+    # TODO: assign data to additional field for firm regardless
+    return entity_data
+
 def bods_interest(parse):
     # parse data for each interest
     interest_type = "shareholding"
@@ -140,7 +220,7 @@ def bods_statement(parse):
     interested_party = {}
     interested_party = bods_party(parse)
     entity = {}
-    # TODO: entity for "firm" or "director" must generate after party
+    entity = bods_entity(parse)
     interest_list = []
     interest_list.append(bods_interest(parse))
     # assign data into statement fields
@@ -200,6 +280,7 @@ def compile_entity(parse):
         # DEBUG: This should not happen
         raise ValueError('Unexpected content in parse data', parse)
     # gather firm details and alternative naming for parse data
+    data["meta"] = parse["meta"] # fallback identifier for entity
     data["name"] = parse["name"]
     data["name_info"] = parse["Profil"]
     data["addr"] = parse["Alamat Surat Menyurat"]
