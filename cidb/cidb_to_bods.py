@@ -54,6 +54,11 @@ def bods_party(parse):
         if parse["#has_data"] == "yes":
             party_name = parse["name"]
             party_type = "naturalPerson"
+            # check nationality and assign 2-letter country code
+            if "MALAYSIA" in parse["nationality"]:
+                nationality = "MY" # refer ISO 3166-1 alpha-2
+            else:
+                nationality = "XX" # unknown nationality if empty
         else:
             null_party_type = "unknown"
             null_party_desc = "no party details"
@@ -70,6 +75,11 @@ def bods_party(parse):
         "name": party_name,
         "identifiers": identifier_list
     }
+    # assign data to additional field for existing person
+    if parse["#has_type"] == "person" and \
+       parse["#has_data"] == "yes":
+        interested_party_data["nationalities"] = []
+        interested_party_data["nationalities"].append(nationality)
     # assign data into null party fields
     null_party_data = {
         "type": null_party_type,
