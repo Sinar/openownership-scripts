@@ -44,7 +44,7 @@ def bods_identifier(parse):
 
 def bods_party(parse):
     # parse data for each interested party
-    now = datetime.datetime.now().strftime("%Y-%m-%d")
+    generated_date = parse["generated_date"] # from bods_statement
     party_type = "arrangement"
     party_name = "Joint shareholding"
     null_party_type = ""
@@ -71,7 +71,7 @@ def bods_party(parse):
     # assign data into interested party fields
     interested_party_data = {
         "id": uuid.uuid4().hex,
-        "statementDate": now,
+        "statementDate": generated_date,
         "type": party_type,
         "name": party_name,
         "identifiers": identifier_list
@@ -128,6 +128,7 @@ def bods_interest(parse):
 def bods_statement(parse):
     # parse data for each statement
     now = datetime.datetime.now().strftime("%Y-%m-%d")
+    parse["generated_date"] = now # save for later reuse
     entity = {}
     # TODO: entity for "firm" or "director"
     interested_party = {}
