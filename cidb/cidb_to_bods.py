@@ -7,6 +7,9 @@ import json
 import uuid
 import datetime
 
+# define global variable
+OBJ_LINK = {}
+
 def party_identifier(parse):
     # parse data for identifier in party
     party_id = ""
@@ -15,10 +18,11 @@ def party_identifier(parse):
     if parse["#has_type"] == "firm":
         party_id = uuid.uuid4().hex
         party_schema = "UUID-HEX"
-        # save these values as object for later reuse
-        parse["firm"] = {}
-        parse["firm"]["party_id"] = party_id
-        parse["firm"]["party_schema"] = party_schema
+        # modify global variable to save as object for later reuse
+        global OBJ_LINK
+        OBJ_LINK["firm"] = {}
+        OBJ_LINK["firm"]["party_id"] = party_id
+        OBJ_LINK["firm"]["party_schema"] = party_schema
     elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes":
             icnum = parse["idenfity_card_no"] # this is not a typo!
