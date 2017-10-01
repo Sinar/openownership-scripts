@@ -7,40 +7,34 @@ import json
 import uuid
 import datetime
 
-def bods_identifier(parse):
-    # parse data for each identifier
-    target_id = ""
-    target_schema = ""
+def party_identifier(parse):
+    # parse data for identifier in party
+    party_id = ""
+    party_schema = ""
     # Use HINT to overwrite default values, if any
     if parse["#has_type"] == "firm":
-        # no persistent identifier in CIDB, use in following order
-        if len(parse["name_info"]["Nombor Pendaftaran"]) > 1:
-            target_id = parse["name_info"]["Nombor Pendaftaran"]
-            target_schema = "CIDB-registered"
-        elif len(parse["name_info"]["ROB"]) > 1:
-            target_id = parse["name_info"]["ROB"]
-            target_schema = "CIDB-ROB"
-        elif len(parse["name_info"]["ROC"]) > 1:
-            target_id = parse["name_info"]["ROC"]
-            target_schema = "CIDB-ROC"
-        else:
-            pass # use default values for empty firm
+        party_id = uuid.uuid4().hex
+        party_schema = "UUID-HEX"
+        # save these values as object for later reuse
+        parse["firm"] = {}
+        parse["firm"]["party_id"] = party_id
+        parse["firm"]["party_schema"] = party_schema
     elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes":
             icnum = parse["idenfity_card_no"] # this is not a typo!
-            target_id = "MYS-IDCARD-" + icnum # following BODS docs
-            target_schema = "id-card" # using BODS codelist
+            party_id = "MYS-IDCARD-" + icnum # following BODS docs
+            party_schema = "id-card" # using BODS codelist
         else:
             pass # use default values for empty director
     else:
         # DEBUG: This should not happen
         raise ValueError('Unexpected HINT in parse data', parse)
     # assign data into identifier fields
-    identifier_data = {
-        "id": target_id,
-        "schema": target_schema
+    party_identifier_data = {
+        "id": party_id,
+        "schema": party_schema
     }
-    return identifier_data
+    return party_identifier_data
 
 def bods_party(parse):
     # parse data for each interested party
@@ -67,7 +61,7 @@ def bods_party(parse):
         # DEBUG: This should not happen
         raise ValueError('Unexpected HINT in parse data', parse)
     identifier_list = []
-    identifier_list.append(bods_identifier(parse))
+    identifier_list.append(party_identifier(parse))
     # assign data into interested party fields
     interested_party_data = {
         "id": uuid.uuid4().hex,
@@ -129,10 +123,10 @@ def bods_statement(parse):
     # parse data for each statement
     now = datetime.datetime.now().strftime("%Y-%m-%d")
     parse["generated_date"] = now # save for later reuse
-    entity = {}
-    # TODO: entity for "firm" or "director"
     interested_party = {}
     interested_party = bods_party(parse)
+    entity = {}
+    # TODO: entity for "firm" or "director" must generate after party
     interest_list = []
     interest_list.append(bods_interest(parse))
     # assign data into statement fields
