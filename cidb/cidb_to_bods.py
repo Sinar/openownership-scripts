@@ -135,6 +135,30 @@ def entity_identifier(parse):
     }
     return entity_identifier_data
 
+def entity_address(parse):
+    # parse data for address in entity
+    address_type = "registered"
+    address_name = ""
+    if len(parse["Alamat"]) != 0:
+        address_name = address_name + parse["Alamat"]
+    if len(parse["Alamat 1"]) != 0:
+        address_name = address_name + ", " + parse["Alamat 1"]
+    if len(parse["Alamat 2"]) != 0:
+        address_name = address_name + ", " + parse["Alamat 2"]
+    if len(parse["Bandar"]) != 0:
+        address_name = address_name + ", " + parse["Bandar"]
+    if len(parse["Negeri"]) != 0:
+        address_name = address_name + ", " + parse["Negeri"]
+    address_postcode = parse["Poskod"]
+    # assign data into address fields
+    entity_address_data = {
+        "type": address_type,
+        "address": address_name,
+        "postCode": address_postcode,
+        "country": "MY"
+    }
+    return entity_address_data
+
 def bods_entity(parse):
     # parse data for each entity
     generated_date = parse["generated_date"] # from bods_statement
@@ -143,12 +167,14 @@ def bods_entity(parse):
     entity_date = "" # no founding date in source
     identifier_list = []
     identifier_list.append(entity_identifier(parse))
+    address_list = []
     # Use HINT to overwrite default values, if any
     if parse["#has_type"] == "firm":
         if parse["#has_data"] == "yes":
             entity_type = "registeredEntity"
             entity_name = parse["name"]
-            # TODO: prepare firm data for additional field
+            address_list.append(entity_address(parse["addr"]))
+            address_list.append(entity_address(parse["addr_ssm"]))
         else:
             entity_type = "unknownEntity"
             entity_name = ""
@@ -171,7 +197,11 @@ def bods_entity(parse):
         "foundingDate": entity_date,
         "jurisdiction": "MY"
     }
-    # TODO: assign data to additional field for firm regardless
+    # assign data to additional field for firm regardless
+    if parse["#has_type"] == "firm":
+        entity_data["addresses"] = []
+        for address in address_list:
+            entity_data["addresses"].append(address)
     return entity_data
 
 def bods_interest(parse):
