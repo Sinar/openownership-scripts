@@ -137,7 +137,13 @@ def entity_identifier(parse):
 
 def entity_address(parse):
     # parse data for address in entity
-    address_type = "registered"
+    address_type = ""
+    # Use HINT to assign type of address
+    if "#has_type" in parse:
+        address_type = parse["#has_type"]
+    else:
+        # DEBUG: Ensure firm addresses have HINT in compile_entity
+        raise ValueError('Unexpected HINT in parse data', parse)
     address_name = ""
     if len(parse["Alamat"]) != 0:
         address_name = address_name + parse["Alamat"]
@@ -314,7 +320,9 @@ def compile_entity(parse):
     data["name"] = parse["name"]
     data["name_info"] = parse["Profil"]
     data["addr"] = parse["Alamat Surat Menyurat"]
+    data["addr"]["#has_type"] = "residence" # HINT: One-off use
     data["addr_ssm"] = parse["Alamat Berdaftar seperti Didalam Sijil SSM"]
+    data["addr_ssm"]["#has_type"] = "registered" # HINT: One-off use
     # generate statement from firm details
     statement_list = []
     statement = bods_statement(data)
