@@ -47,11 +47,11 @@ def bods_party(parse):
     null_party_desc = ""
     # Use HINT to overwrite default values, if any
     if parse["#has_type"] == "firm":
-        if parse["#has_data"] == "yes":
+        if parse["#has_person"] == "yes":
             pass # use default values for existing firm
         else:
             null_party_type = "unknown"
-            null_party_desc = "no party details"
+            null_party_desc = "no beneficial owner in source"
     elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes":
             party_name = parse["name"]
@@ -209,11 +209,8 @@ def bods_interest(parse):
     share_value = 100
     # Use HINT to overwrite default values, if any
     if parse["#has_type"] == "firm":
-        if parse["#has_data"] == "yes":
-            pass # use default values for existing firm
-        else:
-            share_value = 0
-            interest_level = "unknown"
+        if parse["#has_person"] == "yes":
+            pass # use default values for existing firm with director
     elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes" and \
            len(parse["shares"]) != 0:
@@ -241,11 +238,12 @@ def bods_statement(parse):
     entity = bods_entity(parse)
     interest_list = []
     # use HINT to determine if interests should remain empty
-    if "#has_data" in parse:
+    if parse["#has_type"] == "firm":
+        if parse["#has_person"] == "yes":
+            interest_list.append(bods_interest(parse))
+    elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes":
             interest_list.append(bods_interest(parse))
-        else:
-            pass # use default value if empty
     else:
         # DEBUG: This should not happen
         raise ValueError('Unexpected HINT in parse data', parse)
