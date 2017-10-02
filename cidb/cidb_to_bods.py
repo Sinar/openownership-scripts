@@ -48,7 +48,7 @@ def bods_party(parse):
     # Use HINT to overwrite default values, if any
     if parse["#has_type"] == "firm":
         if parse["#has_person"] == "yes":
-            pass # use default values for existing firm
+            pass # use default values for existing firm with director
         else:
             null_party_type = "unknown"
             null_party_desc = "no beneficial owner in source"
@@ -110,8 +110,6 @@ def entity_identifier(parse):
                 # if all above fail, use meta id that always exist
                 entity_id = parse["meta"]["id"]
                 entity_schema = "CIDB-META"
-        else:
-            pass # use default values for empty firm
     elif parse["#has_type"] == "person":
         # check content of global variable OBJ_LINK
         if len(OBJ_LINK["firm"]) != 0:
@@ -178,10 +176,8 @@ def bods_entity(parse):
             address_list.append(entity_address(parse["addr_ssm"]))
         else:
             entity_type = "unknownEntity"
-            entity_name = ""
     elif parse["#has_type"] == "person":
-        if parse["#has_data"] == "yes":
-            pass # use default values for existing person
+        pass # use default values for person
     else:
         # DEBUG: This should not happen
         raise ValueError('Unexpected HINT in parse data', parse)
@@ -206,11 +202,11 @@ def bods_interest(parse):
     # parse data for each interest
     interest_type = "shareholding"
     interest_level = "direct"
-    share_value = 100
+    share_value = 0
     # Use HINT to overwrite default values, if any
     if parse["#has_type"] == "firm":
         if parse["#has_person"] == "yes":
-            pass # use default values for existing firm with director
+            share_value = 100
     elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes" and \
            len(parse["shares"]) != 0:
@@ -325,11 +321,12 @@ def bods_package(parse):
     # parse data for package metadata
     bods_id = uuid.uuid4().hex + '-meta-' + parse["meta"]["id"]
     bods_list = []
-    # generate statements from "firm" details
+    # generate statements from details in source
     statement_list = compile_entity(parse)
     for statement in statement_list:
         bods_list.append(statement)
-    # generate statements from "director" details
+    # IMPORTANT: compile_entity will modify global object OBJ_LINK,
+    # then used by compile_person for cross-linking statements
     statement_list = compile_person(parse)
     for statement in statement_list:
         bods_list.append(statement)
