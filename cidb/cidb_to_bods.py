@@ -215,7 +215,6 @@ def bods_interest(parse):
     interest_type = "shareholding"
     interest_level = "direct"
     share_value = 100
-    description = ""
     # Use HINT to overwrite default values, if any
     if parse["#has_type"] == "firm":
         if parse["#has_data"] == "yes":
@@ -223,7 +222,6 @@ def bods_interest(parse):
         else:
             share_value = 0
             interest_level = "unknown"
-            description = "no firm details"
     elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes" and \
            len(parse["shares"]) != 0:
@@ -231,20 +229,16 @@ def bods_interest(parse):
         else:
             share_value = 0
             interest_level = "unknown"
-            description = "no shares or empty"
     else:
         # DEBUG: This should not happen
         raise ValueError('Unexpected HINT in parse data', parse)
-    annotation_list = []
-    annotation_list.append({"description": description})
     # assign data into interest fields
     interest_data = {
         "type": interest_type,
         "interestLevel": interest_level,
         "share": {
             "exact": float(share_value)
-        },
-        "annotations": annotation_list
+        }
     }
     return interest_data
 
