@@ -257,7 +257,15 @@ def bods_statement(parse):
     entity = {}
     entity = bods_entity(parse)
     interest_list = []
-    interest_list.append(bods_interest(parse))
+    # use HINT to determine if interests should remain empty
+    if "#has_data" in parse:
+        if parse["#has_data"] == "yes":
+            interest_list.append(bods_interest(parse))
+        else:
+            pass # use default value if empty
+    else:
+        # DEBUG: This should not happen
+        raise ValueError('Unexpected HINT in parse data', parse)
     # assign data into statement fields
     statement_data = {
         "#comment": parse["#comment"], # DEBUG: Temp use
