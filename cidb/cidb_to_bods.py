@@ -262,7 +262,6 @@ def bods_statement(parse):
         raise ValueError('Unexpected HINT in parse data', parse)
     # assign data into statement fields
     statement_data = {
-        "#comment": parse["#comment"], # DEBUG: Temp use
         "id": uuid.uuid4().hex,
         "statementDate": now,
         "entity": entity,
@@ -282,14 +281,12 @@ def compile_person(parse):
     statement_list = []
     if isinstance(result, type(None)) or \
        len(parse["directors"]) == 0:
-        data["#comment"] = "no director details" # DEBUG: Temp use
         data["#has_type"] = "person" # HINT: One-off use
         data["#has_data"] = "no" # HINT: One-off use
         statement = bods_statement(data)
         statement_list.append(statement)
     elif len(parse["directors"]) >= 1:
         for data in parse["directors"]:
-            data["#comment"] = "director details here" # DEBUG: Temp use
             data["#has_type"] = "person" # HINT: One-off use
             data["#has_data"] = "yes" # HINT: One-off use
             statement = bods_statement(data)
@@ -304,11 +301,9 @@ def compile_entity(parse):
     # check if "name" field contain valid string; assuming if valid,
     # other fields would have some details if not all
     if len(parse["name"]) == 0:
-        data["#comment"] = "no firm details" # DEBUG: Temp use
         data["#has_type"] = "firm" # HINT: One-off use
         data["#has_data"] = "no" # HINT: One-off use
     elif len(parse["name"]) != 0:
-        data["#comment"] = "firm details here" # DEBUG: Temp use
         data["#has_type"] = "firm" # HINT: One-off use
         data["#has_data"] = "yes" # HINT: One-off use
     else:
