@@ -28,8 +28,6 @@ def party_identifier(parse):
             icnum = parse["idenfity_card_no"] # this is not a typo!
             party_id = "MYS-IDCARD-" + icnum # following BODS docs
             party_schema = "id-card" # using BODS codelist
-        else:
-            pass # use default values for empty director
     else:
         # DEBUG: This should not happen
         raise ValueError('Unexpected HINT in parse data', parse)
@@ -63,9 +61,6 @@ def bods_party(parse):
                 nationality = "MY" # refer ISO 3166-1 alpha-2
             else:
                 nationality = "XX" # unknown nationality if empty
-        else:
-            null_party_type = "unknown"
-            null_party_desc = "no party details"
     else:
         # DEBUG: This should not happen
         raise ValueError('Unexpected HINT in parse data', parse)
@@ -187,9 +182,6 @@ def bods_entity(parse):
     elif parse["#has_type"] == "person":
         if parse["#has_data"] == "yes":
             pass # use default values for existing person
-        else:
-            entity_type = "unknownEntity"
-            entity_name = ""
     else:
         # DEBUG: This should not happen
         raise ValueError('Unexpected HINT in parse data', parse)
@@ -226,9 +218,6 @@ def bods_interest(parse):
         if parse["#has_data"] == "yes" and \
            len(parse["shares"]) != 0:
             share_value = parse["shares"]
-        else:
-            share_value = 0
-            interest_level = "unknown"
     else:
         # DEBUG: This should not happen
         raise ValueError('Unexpected HINT in parse data', parse)
@@ -281,10 +270,7 @@ def compile_person(parse):
     statement_list = []
     if isinstance(result, type(None)) or \
        len(parse["directors"]) == 0:
-        data["#has_type"] = "person" # HINT: One-off use
-        data["#has_data"] = "no" # HINT: One-off use
-        statement = bods_statement(data)
-        statement_list.append(statement)
+        pass # no statement for empty director
     elif len(parse["directors"]) >= 1:
         for data in parse["directors"]:
             data["#has_type"] = "person" # HINT: One-off use
@@ -344,8 +330,8 @@ def bods_package(parse):
             }
         ]
     }
-    # DEBUG: BODS list should contain at least two statements
-    if len(bods_list) < 2:
+    # DEBUG: BODS list should contain at least one statement
+    if len(bods_list) < 1:
         raise ValueError('Unexpected number of statements',
                          len(bods_list))
     return package_data
