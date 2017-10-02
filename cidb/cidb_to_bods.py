@@ -259,13 +259,17 @@ def bods_statement(parse):
     }
     return statement_data
 
-def compile_person(parse):
-    data = {}
+def check_person(parse):
     # check if "directors" field exist
     result = None # assume not found first
     for field in parse:
         if "directors" in field:
             result = "yes" # overwrite result if found
+    return result
+
+def compile_person(parse):
+    data = {}
+    result = check_person(parse)
     # generate statement from directors details
     statement_list = []
     if isinstance(result, type(None)) or \
@@ -303,6 +307,16 @@ def compile_entity(parse):
     data["addr"]["#has_type"] = "residence" # HINT: One-off use
     data["addr_ssm"] = parse["Alamat Berdaftar seperti Didalam Sijil SSM"]
     data["addr_ssm"]["#has_type"] = "registered" # HINT: One-off use
+    # check if director details are available and insert HINT
+    result = check_person(parse)
+    if isinstance(result, type(None)) or \
+       len(parse["directors"]) == 0:
+        data["#has_person"] = "no" # HINT: One-off use
+    elif len(parse["directors"]) >= 1:
+        data["#has_person"] = "yes" # HINT: One-off use
+    else:
+        # DEBUG: This should not happen
+        raise ValueError('Unexpected content in parse data', parse)
     # generate statement from firm details
     statement_list = []
     statement = bods_statement(data)
