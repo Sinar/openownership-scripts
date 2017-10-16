@@ -1,0 +1,6 @@
+$ date -u; python cidb_to_bods2.py; date -u
+Mon Oct 16 18:54:42 UTC 2017
+Read from ./data2/contractors_20150923.jsonl
+Write to ./data2/bods-contractors_20150923.jsonl
+Finish
+Mon Oct 16 18:56:30 UTC 2017
